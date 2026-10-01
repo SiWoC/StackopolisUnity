@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 1e9e24a64a1424444b2f31b4750c7947
+guid: d1d910d07d7f147429684e07dda814c8
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4680851029958109488
-    second: Metropolis_Middle_02_0
+      213: -1440965640524118679
+    second: Metropolis_Roof_01_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -115,13 +115,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Metropolis_Middle_02_0
+      name: Metropolis_Roof_01_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 440
-        height: 233
+        height: 178
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -130,8 +130,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0d653d8d9c64a0fb0800000000000000
-      internalID: -4680851029958109488
+      spriteID: 965440f6269a00ce0800000000000000
+      internalID: -1440965640524118679
       vertices: []
       indices: 
       edges: []
@@ -150,7 +150,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Metropolis_Middle_02_0: -4680851029958109488
+      Metropolis_Roof_01_0: -1440965640524118679
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
