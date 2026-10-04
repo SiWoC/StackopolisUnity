@@ -404,7 +404,6 @@ MonoBehaviour:
   buildingSite: {fileID: 812089670}
   followTarget: {fileID: 1402563131}
   startAfterFloors: 2
-  headroom: 0.3
   smoothTime: 0.25
 --- !u!1 &619394800
 GameObject:
@@ -651,9 +650,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SiWoC.Stackopolis.BuildTower.BuildingSite
   perfectSlack: 0.1
-  supportOverlap: 0.2
+  supportOverlap: 0.4
   fallenLimit: 3
   metersPerFloor: 3
+  swayTopCount: 5
+  swayGrowEvery: 7
 --- !u!4 &812089671
 Transform:
   m_ObjectHideFlags: 0
@@ -956,7 +957,7 @@ Transform:
   m_GameObject: {fileID: 844987282}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.10235, y: -4.09304, z: 0}
+  m_LocalPosition: {x: 0.10235, y: -4, z: 0}
   m_LocalScale: {x: 5.539256, y: 0.21699367, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1534,6 +1535,8 @@ MonoBehaviour:
   craneLowestPosition: 1.5
   craneLowerDuration: 1.2
   craneRaiseDuration: 0.6
+  craneDistance: 0
+  dropZone: {fileID: 844987284}
   hang: {fileID: 828332700}
   floorHangPoint: {fileID: 1808954689}
   roofHangPoint: {fileID: 696109839}
@@ -1542,6 +1545,12 @@ MonoBehaviour:
   amplitudeDegrees: 20
   periodSeconds: 5
   coastDamping: 0.1
+  landingDetectMode: 0
+  settleLinearSpeed: 0.15
+  settleAngularSpeed: 20
+  settleDwellTime: 0.2
+  contactSettleDelay: 0.25
+  settleTimeout: 2
 --- !u!1 &1542142484
 GameObject:
   m_ObjectHideFlags: 0

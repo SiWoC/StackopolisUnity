@@ -25,9 +25,11 @@ namespace SiWoC.Stackopolis.BuildTower
     public class BuildingSite : MonoBehaviour
     {
         [SerializeField] float perfectSlack = 0.1f;
-        [SerializeField] float supportOverlap = 0.2f;
+        [SerializeField] float supportOverlap = 0.4f;
         [SerializeField] int fallenLimit = 3;
         [SerializeField] float metersPerFloor = 3f;
+        [SerializeField] int swayTopCount = 5;
+        [SerializeField] int swayGrowEvery = 7;
 
         readonly List<Block> tower = new List<Block>();
         int fallenFloors;
@@ -35,6 +37,7 @@ namespace SiWoC.Stackopolis.BuildTower
 
         public bool GameOver => gameOver;
         public TowerStatus Status => BuildStatus();
+        public Block Top => tower.Count > 0 ? tower[tower.Count - 1] : null;
         public event Action<TowerStatus> StatusChanged;
 
         public void Receive(Block block)
@@ -64,7 +67,41 @@ namespace SiWoC.Stackopolis.BuildTower
                 Debug.Log($"Game over fallen={fallenFloors}");
             }
 
+            ApplySwayWindow();
             StatusChanged?.Invoke(BuildStatus());
+        }
+
+        /// <summary>
+        /// Keeps the top sway window of tower blocks Dynamic; freezes lower floors as Kinematic.
+        /// Window starts at <see cref="swayTopCount"/> and grows by 1 at floor
+        /// <c>swayTopCount + swayGrowEvery</c>, then every <see cref="swayGrowEvery"/> floors after that.
+        /// </summary>
+        void ApplySwayWindow()
+        {
+            int sway = EffectiveSwayTopCount();
+            int firstSway = Mathf.Max(0, tower.Count - Mathf.Max(0, sway));
+            for (int i = 0; i < tower.Count; i++)
+            {
+                Rigidbody2D body = tower[i].GetComponent<Rigidbody2D>();
+                if (i < firstSway)
+                {
+                    body.linearVelocity = Vector2.zero;
+                    body.angularVelocity = 0f;
+                    body.bodyType = RigidbodyType2D.Kinematic;
+                }
+                else
+                {
+                    body.bodyType = RigidbodyType2D.Dynamic;
+                }
+            }
+        }
+
+        int EffectiveSwayTopCount()
+        {
+            int every = Mathf.Max(1, swayGrowEvery);
+            int startFloor = swayTopCount + every;
+            int bonus = tower.Count < startFloor ? 0 : 1 + (tower.Count - startFloor) / every;
+            return swayTopCount + bonus;
         }
 
         TowerStatus BuildStatus()
@@ -99,12 +136,11 @@ namespace SiWoC.Stackopolis.BuildTower
         {
             Collider2D above = block.GetComponent<Collider2D>();
             Collider2D below = under.GetComponent<Collider2D>();
-            bool touching = above.IsTouching(below);
             float bottom = above.bounds.min.y;
             float top = below.bounds.max.y;
-            bool aboveTop = bottom > top - supportOverlap;
-            Debug.Log($"IsSupported {block.name} on {under.name} touching={touching} bottom={bottom:0.000} top={top:0.000} overlap={supportOverlap} {touching && aboveTop}", block);
-            return touching && aboveTop;
+            bool supported = bottom > top - supportOverlap;
+            Debug.Log($"IsSupported {block.name} on {under.name} bottom={bottom:0.000} top={top:0.000} overlap={supportOverlap} {supported}", block);
+            return supported;
         }
 
         bool IsPerfect(Block block)

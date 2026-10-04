@@ -14,12 +14,21 @@ namespace SiWoC.Stackopolis.BuildTower
             Raising
         }
 
+        enum LandingDetectMode
+        {
+            VelocitySettle,
+            ContactTimer
+        }
+
         [SerializeField] BlockFactory blockFactory;
         [SerializeField] BuildingSite buildingSite;
         [SerializeField] Transform craneAndCart;
         [SerializeField] float craneLowestPosition = 1.5f;
         [SerializeField] float craneLowerDuration = 1.2f;
         [SerializeField] float craneRaiseDuration = 0.6f;
+        [Tooltip("World Y from FloorHangPoint up to CraneAndCart (scene: ~1.965). 0 = measure at Begin.")]
+        [SerializeField] float craneDistance;
+        [SerializeField] Collider2D dropZone;
         [SerializeField] Transform hang;
         [SerializeField] Transform floorHangPoint;
         [SerializeField] Transform roofHangPoint;
@@ -28,6 +37,12 @@ namespace SiWoC.Stackopolis.BuildTower
         [SerializeField] float amplitudeDegrees = 20f;
         [SerializeField] float periodSeconds = 5f;
         [SerializeField] float coastDamping = 0.1f;
+        [SerializeField] LandingDetectMode landingDetectMode = LandingDetectMode.VelocitySettle;
+        [SerializeField] float settleLinearSpeed = 0.15f;
+        [SerializeField] float settleAngularSpeed = 20f;
+        [SerializeField] float settleDwellTime = 0.2f;
+        [SerializeField] float contactSettleDelay = 0.25f;
+        [SerializeField] float settleTimeout = 2f;
 
         Phase phase;
         float coastAngle;
@@ -36,15 +51,36 @@ namespace SiWoC.Stackopolis.BuildTower
         float craneLowerSpeed;
         float craneRaiseSpeed;
         float craneRaiseTargetY;
+        float measuredCraneDistance;
+        float dropGap;
         Block heldBlock;
         Rigidbody2D fallingBody;
-        bool fallingWasAwake;
+        float fallStartTime;
+        float settleQuietTime;
+        bool contactSettling;
+        float contactSettleAt;
+        ContactFilter2D anyContactFilter;
+
+        void Awake()
+        {
+            anyContactFilter.NoFilter();
+        }
 
         public void Begin()
         {
+            measuredCraneDistance = craneDistance > 0f ? craneDistance : MeasureCraneDistance();
             float distance = Mathf.Abs(craneAndCart.localPosition.y - craneLowestPosition);
             craneLowerSpeed = craneLowerDuration > 0f ? distance / craneLowerDuration : distance;
             phase = Phase.Lowering;
+        }
+
+        float MeasureCraneDistance()
+        {
+            Quaternion rotation = hang.localRotation;
+            hang.localRotation = Quaternion.identity;
+            float distance = craneAndCart.position.y - floorHangPoint.position.y;
+            hang.localRotation = rotation;
+            return distance;
         }
 
         void Update()
@@ -75,6 +111,8 @@ namespace SiWoC.Stackopolis.BuildTower
             if (!Mathf.Approximately(position.y, craneLowestPosition))
                 return;
 
+            // Air gap from FloorHangPoint down to DropZone at the first swing pose.
+            dropGap = floorHangPoint.position.y - dropZone.bounds.max.y;
             startTime = Time.time;
             Attach(blockFactory.CreateBottom());
             phase = Phase.Swinging;
@@ -95,11 +133,17 @@ namespace SiWoC.Stackopolis.BuildTower
             phase = Phase.Swinging;
         }
 
-        void BeginRaise(Block placed)
+        void BeginRaise()
         {
-            float step = placed.GetComponent<Collider2D>().bounds.size.y;
-            craneRaiseTargetY = craneAndCart.localPosition.y + step;
-            craneRaiseSpeed = craneRaiseDuration > 0f ? step / craneRaiseDuration : step;
+            Transform topHang = buildingSite.Top.transform.Find("Hang");
+            float targetWorldY = topHang.position.y + measuredCraneDistance + dropGap;
+            if (craneAndCart.parent != null)
+                craneRaiseTargetY = craneAndCart.parent.InverseTransformPoint(new Vector3(craneAndCart.position.x, targetWorldY, craneAndCart.position.z)).y;
+            else
+                craneRaiseTargetY = targetWorldY;
+
+            float distance = Mathf.Abs(craneRaiseTargetY - craneAndCart.localPosition.y);
+            craneRaiseSpeed = craneRaiseDuration > 0f ? distance / craneRaiseDuration : distance;
             phase = Phase.Raising;
         }
 
@@ -109,16 +153,66 @@ namespace SiWoC.Stackopolis.BuildTower
 
             if (fallingBody != null)
             {
-                if (!fallingBody.IsSleeping())
-                    fallingWasAwake = true;
-                else if (fallingWasAwake)
-                    ResolveLanding();
-
+                WatchFalling();
                 return;
             }
 
             if (heldBlock != null && PressedThisFrame())
                 Release(angularVelocity);
+        }
+
+        void WatchFalling()
+        {
+            if (Time.time - fallStartTime >= settleTimeout)
+            {
+                ResolveLanding();
+                return;
+            }
+
+            switch (landingDetectMode)
+            {
+                case LandingDetectMode.VelocitySettle:
+                    WatchVelocitySettle();
+                    break;
+                case LandingDetectMode.ContactTimer:
+                    WatchContactTimer();
+                    break;
+            }
+        }
+
+        void WatchVelocitySettle()
+        {
+            bool quiet = fallingBody.linearVelocity.sqrMagnitude <= settleLinearSpeed * settleLinearSpeed
+                && Mathf.Abs(fallingBody.angularVelocity) <= settleAngularSpeed;
+
+            if (quiet)
+            {
+                settleQuietTime += Time.deltaTime;
+                if (settleQuietTime >= settleDwellTime)
+                    ResolveLanding();
+            }
+            else
+            {
+                settleQuietTime = 0f;
+            }
+        }
+
+        void WatchContactTimer()
+        {
+            if (!contactSettling)
+            {
+                Collider2D falling = fallingBody.GetComponent<Collider2D>();
+                if (falling.IsTouching(anyContactFilter))
+                {
+                    contactSettling = true;
+                    contactSettleAt = Time.time + contactSettleDelay;
+                }
+
+                return;
+            }
+
+            if (Time.time >= contactSettleAt)
+                ResolveLanding();
         }
 
         float UpdateHangSwing()
@@ -175,7 +269,9 @@ namespace SiWoC.Stackopolis.BuildTower
 
             heldBlock = null;
             fallingBody = body;
-            fallingWasAwake = false;
+            fallStartTime = Time.time;
+            settleQuietTime = 0f;
+            contactSettling = false;
             ShowCable();
         }
 
@@ -183,7 +279,8 @@ namespace SiWoC.Stackopolis.BuildTower
         {
             Block block = fallingBody.GetComponent<Block>();
             fallingBody = null;
-            fallingWasAwake = false;
+            settleQuietTime = 0f;
+            contactSettling = false;
 
             int floorsBefore = buildingSite.Status.Floors;
             buildingSite.Receive(block);
@@ -194,7 +291,7 @@ namespace SiWoC.Stackopolis.BuildTower
             }
 
             if (buildingSite.Status.Floors > floorsBefore)
-                BeginRaise(block);
+                BeginRaise();
             else
                 Attach(blockFactory.CreateMiddle());
         }
