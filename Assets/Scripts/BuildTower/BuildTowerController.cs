@@ -8,7 +8,9 @@ namespace SiWoC.Stackopolis.BuildTower
         [SerializeField] CraneDriver craneDriver;
         [SerializeField] BuildingSite buildingSite;
         [SerializeField] GameObject startButton;
+        [SerializeField] GameObject gameOverImage;
         [SerializeField] TMP_Text heightText;
+        [SerializeField] GameObject[] backupBlocks;
 
         string heightFormat;
 
@@ -42,6 +44,13 @@ namespace SiWoC.Stackopolis.BuildTower
         void OnTowerStatusChanged(TowerStatus status)
         {
             heightText.text = string.Format(heightFormat, status.Floors, Mathf.RoundToInt(status.Meters));
+            for (int i = 0; i < backupBlocks.Length; i++)
+                backupBlocks[i].SetActive(i < status.LivesRemaining);
+
+            if (status.GameOver)
+            {
+                gameOverImage.SetActive(true);
+            }
         }
     }
 }

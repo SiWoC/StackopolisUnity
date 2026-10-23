@@ -30,15 +30,21 @@ namespace SiWoC.Stackopolis.BuildTower
         [SerializeField] float metersPerFloor = 3f;
         [SerializeField] int swayTopCount = 5;
         [SerializeField] int swayGrowEvery = 7;
+        [SerializeField] Collider2D dropZone;
+        [SerializeField] float collapseQuietWindow = 0.3f;
 
         readonly List<Block> tower = new List<Block>();
+        readonly HashSet<Block> pendingFallen = new HashSet<Block>();
         int fallenFloors;
         bool gameOver;
+        bool collapsePending;
+        float collapseQuietUntil;
 
         public bool GameOver => gameOver;
         public TowerStatus Status => BuildStatus();
         public Block Top => tower.Count > 0 ? tower[tower.Count - 1] : null;
         public event Action<TowerStatus> StatusChanged;
+        public event Action CollapseSettled;
 
         public void Receive(Block block)
         {
@@ -47,18 +53,36 @@ namespace SiWoC.Stackopolis.BuildTower
 
             PruneFallen();
 
+            // Prune can exhaust lives before this landing is applied — don't stack on a dead tower.
+            if (fallenFloors >= fallenLimit)
+            {
+                gameOver = true;
+                Debug.Log($"Game over fallen={fallenFloors}");
+                block.ArmDebris(dropZone.bounds.min.y);
+                ApplySwayWindow();
+                StatusChanged?.Invoke(BuildStatus());
+                return;
+            }
+
             if (tower.Count == 0 || IsSupported(block, tower[tower.Count - 1]))
             {
                 if (tower.Count > 0)
-                    block.perfect = IsPerfect(block);
+                {
+                    Block under = tower[tower.Count - 1];
+                    block.perfect = IsPerfect(block, under);
+                    if (block.perfect)
+                        SnapPerfectX(block, under);
+                }
 
                 Debug.Log($"Tower add {block.name} {block.type} perfect={block.perfect} count={tower.Count + 1} fallen={fallenFloors}", block);
                 tower.Add(block);
+                ArmInTower(block);
             }
             else
             {
                 fallenFloors++;
                 Debug.Log($"Tower miss {block.name} fallen={fallenFloors}", block);
+                block.ArmDebris(dropZone.bounds.min.y);
             }
 
             if (fallenFloors >= fallenLimit)
@@ -69,6 +93,96 @@ namespace SiWoC.Stackopolis.BuildTower
 
             ApplySwayWindow();
             StatusChanged?.Invoke(BuildStatus());
+        }
+
+        void FixedUpdate()
+        {
+            if (!collapsePending || gameOver)
+                return;
+
+            if (Time.time < collapseQuietUntil)
+                return;
+
+            if (!RemainingStackOk())
+                return;
+
+            CommitCollapse();
+        }
+
+        void ArmInTower(Block block)
+        {
+            float validY = block.GetComponent<Collider2D>().bounds.min.y;
+            block.FellBelowValidY += OnBlockFellBelowValidY;
+            block.ArmInTower(validY, dropZone.bounds.min.y, supportOverlap);
+        }
+
+        void OnBlockFellBelowValidY(Block block)
+        {
+            if (gameOver || !tower.Contains(block))
+                return;
+
+            pendingFallen.Add(block);
+            collapsePending = true;
+            collapseQuietUntil = Time.time + collapseQuietWindow;
+            Debug.Log($"Tower breach {block.name} quietUntil={collapseQuietUntil:0.00}", block);
+        }
+
+        bool RemainingStackOk()
+        {
+            for (int i = 0; i < tower.Count; i++)
+            {
+                Block block = tower[i];
+                if (block == null || pendingFallen.Contains(block))
+                    continue;
+
+                if (!block.IsWithinValidY())
+                    return false;
+            }
+
+            return true;
+        }
+
+        void CommitCollapse()
+        {
+            int first = tower.Count;
+            for (int i = 0; i < tower.Count; i++)
+            {
+                Block block = tower[i];
+                if (block == null || pendingFallen.Contains(block))
+                {
+                    first = i;
+                    break;
+                }
+            }
+
+            for (int i = first; i < tower.Count; i++)
+            {
+                Block block = tower[i];
+                fallenFloors++;
+                if (block == null)
+                    continue;
+
+                Debug.Log($"Tower fall {block.name} fallen={fallenFloors}", block);
+                block.FellBelowValidY -= OnBlockFellBelowValidY;
+                // Keep destroy-watch so debris below DropZone is cleaned up; stop valid-Y events.
+                block.ArmDebris(dropZone.bounds.min.y);
+            }
+
+            if (first < tower.Count)
+                tower.RemoveRange(first, tower.Count - first);
+
+            pendingFallen.Clear();
+            collapsePending = false;
+
+            if (fallenFloors >= fallenLimit)
+            {
+                gameOver = true;
+                Debug.Log($"Game over fallen={fallenFloors}");
+            }
+
+            ApplySwayWindow();
+            StatusChanged?.Invoke(BuildStatus());
+            CollapseSettled?.Invoke();
         }
 
         /// <summary>
@@ -126,6 +240,8 @@ namespace SiWoC.Stackopolis.BuildTower
             {
                 fallenFloors++;
                 Debug.Log($"Tower fall {tower[i].name} fallen={fallenFloors}", tower[i]);
+                tower[i].FellBelowValidY -= OnBlockFellBelowValidY;
+                tower[i].ArmDebris(dropZone.bounds.min.y);
             }
 
             if (keep < tower.Count)
@@ -143,14 +259,30 @@ namespace SiWoC.Stackopolis.BuildTower
             return supported;
         }
 
-        bool IsPerfect(Block block)
+        bool IsPerfect(Block block, Block under)
         {
             Collider2D dropped = block.GetComponent<Collider2D>();
-            Collider2D under = tower[tower.Count - 1].GetComponent<Collider2D>();
-            float delta = Mathf.Abs(dropped.bounds.center.x - under.bounds.center.x);
+            Collider2D below = under.GetComponent<Collider2D>();
+            float delta = Mathf.Abs(dropped.bounds.center.x - below.bounds.center.x);
             bool perfect = delta <= perfectSlack;
             Debug.Log($"IsPerfect {block.name} delta={delta:0.000} slack={perfectSlack} {perfect}", block);
             return perfect;
+        }
+
+        void SnapPerfectX(Block block, Block under)
+        {
+            Rigidbody2D body = block.GetComponent<Rigidbody2D>();
+            Collider2D dropped = block.GetComponent<Collider2D>();
+            Collider2D below = under.GetComponent<Collider2D>();
+            float deltaX = below.bounds.center.x - dropped.bounds.center.x;
+
+            Vector2 position = body.position;
+            position.x += deltaX;
+            body.position = position;
+
+            Vector2 velocity = body.linearVelocity;
+            velocity.x = 0f;
+            body.linearVelocity = velocity;
         }
     }
 }

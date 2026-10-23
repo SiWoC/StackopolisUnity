@@ -11,7 +11,7 @@ namespace SiWoC.Stackopolis.BuildTower
             Lowering,
             Swinging,
             Coasting,
-            Raising
+            Repositioning
         }
 
         enum LandingDetectMode
@@ -23,9 +23,9 @@ namespace SiWoC.Stackopolis.BuildTower
         [SerializeField] BlockFactory blockFactory;
         [SerializeField] BuildingSite buildingSite;
         [SerializeField] Transform craneAndCart;
-        [SerializeField] float craneLowestPosition = 1.5f;
+        [SerializeField] float craneLowestPosition = -2.2f;
         [SerializeField] float craneLowerDuration = 1.2f;
-        [SerializeField] float craneRaiseDuration = 0.6f;
+        [SerializeField] float craneRepositionDuration = 0.6f;
         [Tooltip("World Y from FloorHangPoint up to CraneAndCart (scene: ~1.965). 0 = measure at Begin.")]
         [SerializeField] float craneDistance;
         [SerializeField] Collider2D dropZone;
@@ -35,7 +35,7 @@ namespace SiWoC.Stackopolis.BuildTower
         [SerializeField] GameObject cableHookAndSpreaders;
         [SerializeField] GameObject cableAndHook;
         [SerializeField] float amplitudeDegrees = 20f;
-        [SerializeField] float periodSeconds = 5f;
+        [SerializeField] float periodSeconds = 4f;
         [SerializeField] float coastDamping = 0.1f;
         [SerializeField] LandingDetectMode landingDetectMode = LandingDetectMode.VelocitySettle;
         [SerializeField] float settleLinearSpeed = 0.15f;
@@ -49,10 +49,11 @@ namespace SiWoC.Stackopolis.BuildTower
         float coastAngularVelocity;
         float startTime;
         float craneLowerSpeed;
-        float craneRaiseSpeed;
-        float craneRaiseTargetY;
+        float craneRepositionSpeed;
+        float craneRepositionTargetY;
         float measuredCraneDistance;
         float dropGap;
+        bool coastAfterReposition;
         Block heldBlock;
         Rigidbody2D fallingBody;
         float fallStartTime;
@@ -63,7 +64,18 @@ namespace SiWoC.Stackopolis.BuildTower
 
         void Awake()
         {
-            anyContactFilter.NoFilter();
+            anyContactFilter = ContactFilter2D.noFilter;
+        }
+
+        void OnEnable()
+        {
+            buildingSite.CollapseSettled += OnCollapseSettled;
+        }
+
+        void OnDisable()
+        {
+            if (buildingSite)
+                buildingSite.CollapseSettled -= OnCollapseSettled;
         }
 
         public void Begin()
@@ -72,6 +84,27 @@ namespace SiWoC.Stackopolis.BuildTower
             float distance = Mathf.Abs(craneAndCart.localPosition.y - craneLowestPosition);
             craneLowerSpeed = craneLowerDuration > 0f ? distance / craneLowerDuration : distance;
             phase = Phase.Lowering;
+        }
+
+        void OnCollapseSettled()
+        {
+            if (buildingSite.GameOver)
+            {
+                FinishGameOverMotion();
+                return;
+            }
+
+            // Landing resolve will reposition after Receive; avoid fighting that path.
+            if (fallingBody != null)
+                return;
+
+            BeginReposition();
+        }
+
+        void FinishGameOverMotion()
+        {
+            coastAfterReposition = true;
+            BeginReposition();
         }
 
         float MeasureCraneDistance()
@@ -96,8 +129,8 @@ namespace SiWoC.Stackopolis.BuildTower
                 case Phase.Coasting:
                     Coast();
                     break;
-                case Phase.Raising:
-                    RaiseCrane();
+                case Phase.Repositioning:
+                    RepositionCrane();
                     break;
             }
         }
@@ -118,33 +151,48 @@ namespace SiWoC.Stackopolis.BuildTower
             phase = Phase.Swinging;
         }
 
-        void RaiseCrane()
+        void RepositionCrane()
         {
             UpdateHangSwing();
 
             Vector3 position = craneAndCart.localPosition;
-            position.y = Mathf.MoveTowards(position.y, craneRaiseTargetY, craneRaiseSpeed * Time.deltaTime);
+            position.y = Mathf.MoveTowards(position.y, craneRepositionTargetY, craneRepositionSpeed * Time.deltaTime);
             craneAndCart.localPosition = position;
 
-            if (!Mathf.Approximately(position.y, craneRaiseTargetY))
+            if (!Mathf.Approximately(position.y, craneRepositionTargetY))
                 return;
 
-            Attach(blockFactory.CreateMiddle());
+            if (coastAfterReposition || buildingSite.GameOver)
+            {
+                coastAfterReposition = false;
+                BeginCoast();
+                return;
+            }
+
+            if (heldBlock == null)
+                Attach(blockFactory.CreateMiddle());
             phase = Phase.Swinging;
         }
 
-        void BeginRaise()
+        void BeginReposition()
         {
-            Transform topHang = buildingSite.Top.transform.Find("Hang");
-            float targetWorldY = topHang.position.y + measuredCraneDistance + dropGap;
-            if (craneAndCart.parent != null)
-                craneRaiseTargetY = craneAndCart.parent.InverseTransformPoint(new Vector3(craneAndCart.position.x, targetWorldY, craneAndCart.position.z)).y;
+            if (buildingSite.Top == null)
+            {
+                craneRepositionTargetY = craneLowestPosition;
+            }
             else
-                craneRaiseTargetY = targetWorldY;
+            {
+                Transform topHang = buildingSite.Top.transform.Find("Hang");
+                float targetWorldY = topHang.position.y + measuredCraneDistance + dropGap;
+                if (craneAndCart.parent != null)
+                    craneRepositionTargetY = craneAndCart.parent.InverseTransformPoint(new Vector3(craneAndCart.position.x, targetWorldY, craneAndCart.position.z)).y;
+                else
+                    craneRepositionTargetY = targetWorldY;
+            }
 
-            float distance = Mathf.Abs(craneRaiseTargetY - craneAndCart.localPosition.y);
-            craneRaiseSpeed = craneRaiseDuration > 0f ? distance / craneRaiseDuration : distance;
-            phase = Phase.Raising;
+            float distance = Mathf.Abs(craneRepositionTargetY - craneAndCart.localPosition.y);
+            craneRepositionSpeed = craneRepositionDuration > 0f ? distance / craneRepositionDuration : distance;
+            phase = Phase.Repositioning;
         }
 
         void Swing()
@@ -286,12 +334,13 @@ namespace SiWoC.Stackopolis.BuildTower
             buildingSite.Receive(block);
             if (buildingSite.GameOver)
             {
-                BeginCoast();
+                FinishGameOverMotion();
                 return;
             }
 
-            if (buildingSite.Status.Floors > floorsBefore)
-                BeginRaise();
+            int floorsAfter = buildingSite.Status.Floors;
+            if (floorsAfter != floorsBefore)
+                BeginReposition();
             else
                 Attach(blockFactory.CreateMiddle());
         }
