@@ -9,12 +9,13 @@ namespace SiWoC.Stackopolis.MainMenu
 
         public void OnInfinite()
         {
-            if (GameFlow.Instance == null)
+            if (GameFlow.Instance == null || BuildSession.Instance == null)
             {
-                Debug.LogError("GameFlow is missing. Play from the Boot scene.");
+                Debug.LogError("GameFlow/BuildSession is missing. Play from the Boot scene.");
                 return;
             }
 
+            BuildSession.Instance.Configure(GameMode.Infinite, TowerType.Residential);
             GameFlow.Instance.Forward(buildTowerSceneName);
         }
 

@@ -1,37 +1,50 @@
+using SiWoC.Stackopolis.Globals;
 using UnityEngine;
 
 namespace SiWoC.Stackopolis.BuildTower
 {
     public class BlockFactory : MonoBehaviour
     {
-        [SerializeField] BuildingTheme currentTheme;
         [SerializeField] GameObject floorPrefab;
+
+        BuildSession buildSession;
 
         void Awake()
         {
-            Debug.Assert(currentTheme != null, nameof(currentTheme), this);
-            Debug.Assert(floorPrefab != null, nameof(floorPrefab), this);
+            buildSession = BuildSession.Instance;
         }
 
-        public Block CreateBottom(BuildingTheme theme = null, bool randomSprite = true, int spriteIndex = 0)
+        public Block CreateBottom()
         {
-            BuildingTheme selected = theme != null ? theme : currentTheme;
-            Sprite sprite = randomSprite ? selected.GetRandomBottom() : selected.GetBottom(spriteIndex);
+            BuildingTheme theme = buildSession.CurrentTheme;
+            Sprite sprite = UseTowerTypeSprite()
+                ? theme.GetBottom(buildSession.TowerTypeToBuild)
+                : theme.GetRandomBottom();
             return Create(sprite, BlockType.Bottom);
         }
 
-        public Block CreateMiddle(BuildingTheme theme = null, bool randomSprite = true, int spriteIndex = 0)
+        public Block CreateMiddle()
         {
-            BuildingTheme selected = theme != null ? theme : currentTheme;
-            Sprite sprite = randomSprite ? selected.GetRandomMiddle() : selected.GetMiddle(spriteIndex);
+            BuildingTheme theme = buildSession.CurrentTheme;
+            Sprite sprite = UseTowerTypeSprite()
+                ? theme.GetMiddle(buildSession.TowerTypeToBuild)
+                : theme.GetRandomMiddle();
             return Create(sprite, BlockType.Middle);
         }
 
-        public Block CreateRoof(BuildingTheme theme = null, bool randomSprite = true, int spriteIndex = 0)
+        public Block CreateRoof()
         {
-            BuildingTheme selected = theme != null ? theme : currentTheme;
-            Sprite sprite = randomSprite ? selected.GetRandomRoof() : selected.GetRoof(spriteIndex);
+            BuildingTheme theme = buildSession.CurrentTheme;
+            Sprite sprite = UseTowerTypeSprite()
+                ? theme.GetRoof(buildSession.TowerTypeToBuild)
+                : theme.GetRandomRoof();
             return Create(sprite, BlockType.Roof);
+        }
+
+        bool UseTowerTypeSprite()
+        {
+            GameMode mode = buildSession.GameMode;
+            return mode == GameMode.Infinite || mode == GameMode.Classic;
         }
 
         Block Create(Sprite sprite, BlockType type)

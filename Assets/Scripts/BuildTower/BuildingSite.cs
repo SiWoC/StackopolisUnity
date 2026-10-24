@@ -46,6 +46,32 @@ namespace SiWoC.Stackopolis.BuildTower
         public event Action<TowerStatus> StatusChanged;
         public event Action CollapseSettled;
 
+        public void Reset()
+        {
+            for (int i = 0; i < tower.Count; i++)
+            {
+                Block block = tower[i];
+                if (block == null)
+                    continue;
+
+                block.FellBelowValidY -= OnBlockFellBelowValidY;
+                block.Disarm();
+            }
+
+            tower.Clear();
+            pendingFallen.Clear();
+            fallenFloors = 0;
+            gameOver = false;
+            collapsePending = false;
+
+            // Cleanup stray fallen blocks
+            Block[] blocks = FindObjectsByType<Block>();
+            for (int i = 0; i < blocks.Length; i++)
+                Destroy(blocks[i].gameObject);
+
+            StatusChanged?.Invoke(BuildStatus());
+        }
+
         public void Receive(Block block)
         {
             if (gameOver)

@@ -26,8 +26,8 @@ namespace SiWoC.Stackopolis.BuildTower
         [SerializeField] float craneLowestPosition = -2.2f;
         [SerializeField] float craneLowerDuration = 1.2f;
         [SerializeField] float craneRepositionDuration = 0.6f;
-        [Tooltip("World Y from FloorHangPoint up to CraneAndCart (scene: ~1.965). 0 = measure at Begin.")]
-        [SerializeField] float craneDistance;
+        [Tooltip("World Y from FloorHangPoint up to CraneAndCart.")]
+        [SerializeField] float craneDistance = 2f;
         [SerializeField] Collider2D dropZone;
         [SerializeField] Transform hang;
         [SerializeField] Transform floorHangPoint;
@@ -51,7 +51,6 @@ namespace SiWoC.Stackopolis.BuildTower
         float craneLowerSpeed;
         float craneRepositionSpeed;
         float craneRepositionTargetY;
-        float measuredCraneDistance;
         float dropGap;
         bool coastAfterReposition;
         Block heldBlock;
@@ -61,10 +60,12 @@ namespace SiWoC.Stackopolis.BuildTower
         bool contactSettling;
         float contactSettleAt;
         ContactFilter2D anyContactFilter;
+        float craneStartLocalY;
 
         void Awake()
         {
             anyContactFilter = ContactFilter2D.noFilter;
+            craneStartLocalY = craneAndCart.localPosition.y;
         }
 
         void OnEnable()
@@ -78,9 +79,36 @@ namespace SiWoC.Stackopolis.BuildTower
                 buildingSite.CollapseSettled -= OnCollapseSettled;
         }
 
+        public void ResetRound()
+        {
+            if (heldBlock != null)
+            {
+                Destroy(heldBlock.gameObject);
+                heldBlock = null;
+            }
+
+            if (fallingBody != null)
+            {
+                Destroy(fallingBody.gameObject);
+                fallingBody = null;
+            }
+
+            coastAfterReposition = false;
+            settleQuietTime = 0f;
+            contactSettling = false;
+            coastAngle = 0f;
+            coastAngularVelocity = 0f;
+            hang.localRotation = Quaternion.identity;
+
+            Vector3 position = craneAndCart.localPosition;
+            position.y = craneStartLocalY;
+            craneAndCart.localPosition = position;
+            phase = Phase.Idle;
+            ShowCable();
+        }
+
         public void Begin()
         {
-            measuredCraneDistance = craneDistance > 0f ? craneDistance : MeasureCraneDistance();
             float distance = Mathf.Abs(craneAndCart.localPosition.y - craneLowestPosition);
             craneLowerSpeed = craneLowerDuration > 0f ? distance / craneLowerDuration : distance;
             phase = Phase.Lowering;
@@ -105,15 +133,6 @@ namespace SiWoC.Stackopolis.BuildTower
         {
             coastAfterReposition = true;
             BeginReposition();
-        }
-
-        float MeasureCraneDistance()
-        {
-            Quaternion rotation = hang.localRotation;
-            hang.localRotation = Quaternion.identity;
-            float distance = craneAndCart.position.y - floorHangPoint.position.y;
-            hang.localRotation = rotation;
-            return distance;
         }
 
         void Update()
@@ -183,7 +202,7 @@ namespace SiWoC.Stackopolis.BuildTower
             else
             {
                 Transform topHang = buildingSite.Top.transform.Find("Hang");
-                float targetWorldY = topHang.position.y + measuredCraneDistance + dropGap;
+                float targetWorldY = topHang.position.y + craneDistance + dropGap;
                 if (craneAndCart.parent != null)
                     craneRepositionTargetY = craneAndCart.parent.InverseTransformPoint(new Vector3(craneAndCart.position.x, targetWorldY, craneAndCart.position.z)).y;
                 else

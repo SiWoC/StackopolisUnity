@@ -12,10 +12,23 @@ namespace SiWoC.Stackopolis.BuildTower
         bool following;
         float yOffset;
         float velocityY;
+        Vector3 startPosition;
+
+        void Awake()
+        {
+            startPosition = transform.position;
+        }
 
         void OnEnable()
         {
             buildingSite.StatusChanged += OnTowerStatusChanged;
+        }
+
+        public void ResetFollow()
+        {
+            following = false;
+            velocityY = 0f;
+            transform.position = startPosition;
         }
 
         void OnDisable()

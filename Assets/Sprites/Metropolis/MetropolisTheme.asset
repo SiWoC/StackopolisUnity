@@ -21,3 +21,13 @@ MonoBehaviour:
   roofSprites:
   - {fileID: 21300000, guid: d1d910d07d7f147429684e07dda814c8, type: 3}
   propSprites: []
+  background: {fileID: 21300000, guid: 1e652ebe11c3cd5428356e914db84444, type: 3}
+  gradient1: {fileID: 21300000, guid: bf13b976a8d122b418808b42c3f1b06f, type: 3}
+  tile2: {fileID: 21300000, guid: e602aee90206729449c7af3df54fbe0e, type: 3}
+  tile2Count: 0
+  gradient3: {fileID: 21300000, guid: a81a62f2c51711c46b74579311025ef8, type: 3}
+  tile4: {fileID: 21300000, guid: 7d3a1212d1472124b886179ba0355f2b, type: 3}
+  tile4Count: 0
+  gradient5: {fileID: 21300000, guid: bbbe74f9a97de154abbfc273e8b0da1b, type: 3}
+  moon6: {fileID: 21300000, guid: 4e4e7e7e4b55b8849808291da478dedc, type: 3}
+  tile7: {fileID: 21300000, guid: 32bb3dada7a950949b8b309f09b607fb, type: 3}
