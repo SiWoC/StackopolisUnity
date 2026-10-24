@@ -41,6 +41,7 @@ namespace SiWoC.Stackopolis.BuildTower
         float collapseQuietUntil;
 
         public bool GameOver => gameOver;
+        public float MetersPerFloor => metersPerFloor;
         public TowerStatus Status => BuildStatus();
         public Block Top => tower.Count > 0 ? tower[tower.Count - 1] : null;
         public event Action<TowerStatus> StatusChanged;
@@ -215,9 +216,16 @@ namespace SiWoC.Stackopolis.BuildTower
         /// Keeps the top sway window of tower blocks Dynamic; freezes lower floors as Kinematic.
         /// Window starts at <see cref="swayTopCount"/> and grows by 1 at floor
         /// <c>swayTopCount + swayGrowEvery</c>, then every <see cref="swayGrowEvery"/> floors after that.
+        /// On game over freezes the remaining stack instead (leaves pending/debris Dynamic).
         /// </summary>
         void ApplySwayWindow()
         {
+            if (gameOver)
+            {
+                FreezeRemainingTower();
+                return;
+            }
+
             int sway = EffectiveSwayTopCount();
             int firstSway = Mathf.Max(0, tower.Count - Mathf.Max(0, sway));
             for (int i = 0; i < tower.Count; i++)
@@ -233,6 +241,21 @@ namespace SiWoC.Stackopolis.BuildTower
                 {
                     body.bodyType = RigidbodyType2D.Dynamic;
                 }
+            }
+        }
+
+        void FreezeRemainingTower()
+        {
+            for (int i = 0; i < tower.Count; i++)
+            {
+                Block block = tower[i];
+                if (block == null || pendingFallen.Contains(block))
+                    continue;
+
+                Rigidbody2D body = block.GetComponent<Rigidbody2D>();
+                body.linearVelocity = Vector2.zero;
+                body.angularVelocity = 0f;
+                body.bodyType = RigidbodyType2D.Kinematic;
             }
         }
 

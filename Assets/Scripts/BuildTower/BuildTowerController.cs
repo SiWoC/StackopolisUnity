@@ -14,14 +14,18 @@ namespace SiWoC.Stackopolis.BuildTower
         [SerializeField] GameObject gameOverImage;
         [SerializeField] GameObject againButton;
         [SerializeField] GameObject bottomPanel;
+        [SerializeField] TMP_Text highScoreText;
         [SerializeField] TMP_Text heightText;
         [SerializeField] GameObject[] backupBlocks;
 
         string heightFormat;
+        string highScoreFormat;
 
         void Awake()
         {
             heightFormat = heightText.text;
+            highScoreFormat = highScoreText.text;
+            RefreshHighScoreText();
         }
 
         void OnEnable()
@@ -71,10 +75,19 @@ namespace SiWoC.Stackopolis.BuildTower
 
             if (status.GameOver)
             {
+                Settings.TrySetHighScoreFloors(status.Floors);
+                RefreshHighScoreText();
                 gameOverImage.SetActive(true);
                 againButton.SetActive(true);
                 bottomPanel.SetActive(true);
             }
+        }
+
+        void RefreshHighScoreText()
+        {
+            int floors = Settings.HighScoreFloors;
+            int meters = Mathf.RoundToInt(floors * buildingSite.MetersPerFloor);
+            highScoreText.text = string.Format(highScoreFormat, floors, meters);
         }
     }
 }
