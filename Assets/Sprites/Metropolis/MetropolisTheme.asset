@@ -14,20 +14,35 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SiWoC.Stackopolis.BuildTower.BuildingTheme
   themeName: Metropolis
   bottomSprites:
+  - {fileID: 21300000, guid: 3c2f7b559ba42b14988dc0e46c2b6cb7, type: 3}
+  - {fileID: 21300000, guid: 2289883670c6d194aaeb610cf444e15e, type: 3}
   - {fileID: 21300000, guid: 578911b918fba194aa90f189db330479, type: 3}
+  - {fileID: 21300000, guid: 2ddbb02b6e7a6534ab5ac24ea540dbd3, type: 3}
   middleSprites:
   - {fileID: 21300000, guid: 1e9e24a64a1424444b2f31b4750c7947, type: 3}
   - {fileID: 21300000, guid: 591628464e7e9664fb0b4175dc9501d7, type: 3}
   roofSprites:
   - {fileID: 21300000, guid: d1d910d07d7f147429684e07dda814c8, type: 3}
+  residentialBottomIndex: 0
+  commercialBottomIndex: 1
+  officeBottomIndex: 2
+  luxuryBottomIndex: 3
+  residentialMiddleIndex: 0
+  commercialMiddleIndex: 1
+  officeMiddleIndex: 2
+  luxuryMiddleIndex: 3
+  residentialRoofIndex: 0
+  commercialRoofIndex: 1
+  officeRoofIndex: 2
+  luxuryRoofIndex: 3
   propSprites: []
   background: {fileID: 21300000, guid: 1e652ebe11c3cd5428356e914db84444, type: 3}
   gradient1: {fileID: 21300000, guid: bf13b976a8d122b418808b42c3f1b06f, type: 3}
   tile2: {fileID: 21300000, guid: e602aee90206729449c7af3df54fbe0e, type: 3}
-  tile2Count: 0
+  tile2Count: 1
   gradient3: {fileID: 21300000, guid: a81a62f2c51711c46b74579311025ef8, type: 3}
   tile4: {fileID: 21300000, guid: 7d3a1212d1472124b886179ba0355f2b, type: 3}
-  tile4Count: 0
+  tile4Count: 1
   gradient5: {fileID: 21300000, guid: bbbe74f9a97de154abbfc273e8b0da1b, type: 3}
   moon6: {fileID: 21300000, guid: 4e4e7e7e4b55b8849808291da478dedc, type: 3}
   tile7: {fileID: 21300000, guid: 32bb3dada7a950949b8b309f09b607fb, type: 3}

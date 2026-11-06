@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 1e9e24a64a1424444b2f31b4750c7947
+guid: 591628464e7e9664fb0b4175dc9501d7
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4680851029958109488
-    second: Metropolis_Middle_02_0
+      213: 2390338654099580266
+    second: Metropolis_Middle_01_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -50,7 +50,7 @@ TextureImporter:
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 7
-  spritePivot: {x: 0.5, y: 0}
+  spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
@@ -115,7 +115,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Metropolis_Middle_02_0
+      name: Metropolis_Middle_01_0
       rect:
         serializedVersion: 2
         x: 0
@@ -123,15 +123,15 @@ TextureImporter:
         width: 440
         height: 233
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0d653d8d9c64a0fb0800000000000000
-      internalID: -4680851029958109488
+      spriteID: a65ad7267503c2120800000000000000
+      internalID: 2390338654099580266
       vertices: []
       indices: 
       edges: []
@@ -141,7 +141,7 @@ TextureImporter:
     physicsShape: []
     bones: []
     spriteID: 5e97eb03825dee720800000000000000
-    internalID: 1537655665
+    internalID: 0
     vertices: []
     indices: 
     edges: []
@@ -150,7 +150,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Metropolis_Middle_02_0: -4680851029958109488
+      Metropolis_Middle_01_0: 2390338654099580266
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

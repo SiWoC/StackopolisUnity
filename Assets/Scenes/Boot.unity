@@ -179,6 +179,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SiWoC.Stackopolis.Globals.BuildSession
   gameMode: 0
   towerTypeToBuild: 0
+  difficulty: 2
   currentTheme: {fileID: 11400000, guid: 435807b282a9bf24d974acc3ccc946b3, type: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

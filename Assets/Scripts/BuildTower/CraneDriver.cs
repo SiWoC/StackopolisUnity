@@ -26,6 +26,9 @@ namespace SiWoC.Stackopolis.BuildTower
         [SerializeField] float craneLowestPosition = -2.2f;
         [SerializeField] float craneLowerDuration = 1.2f;
         [SerializeField] float craneRepositionDuration = 0.6f;
+        [SerializeField] AudioSource craneSource;
+        [SerializeField] AudioClip craneFirst;
+        [SerializeField] AudioClip craneRepositioning;
         [Tooltip("World Y from FloorHangPoint up to CraneAndCart.")]
         [SerializeField] float craneDistance = 2f;
         [SerializeField] Collider2D dropZone;
@@ -104,6 +107,7 @@ namespace SiWoC.Stackopolis.BuildTower
             position.y = craneStartLocalY;
             craneAndCart.localPosition = position;
             phase = Phase.Idle;
+            craneSource.Stop();
             ShowCable();
         }
 
@@ -112,6 +116,7 @@ namespace SiWoC.Stackopolis.BuildTower
             float distance = Mathf.Abs(craneAndCart.localPosition.y - craneLowestPosition);
             craneLowerSpeed = craneLowerDuration > 0f ? distance / craneLowerDuration : distance;
             phase = Phase.Lowering;
+            craneSource.PlayOneShot(craneFirst);
         }
 
         void OnCollapseSettled()
@@ -181,6 +186,8 @@ namespace SiWoC.Stackopolis.BuildTower
             if (!Mathf.Approximately(position.y, craneRepositionTargetY))
                 return;
 
+            craneSource.Stop();
+
             if (coastAfterReposition || buildingSite.GameOver)
             {
                 coastAfterReposition = false;
@@ -211,6 +218,9 @@ namespace SiWoC.Stackopolis.BuildTower
 
             float distance = Mathf.Abs(craneRepositionTargetY - craneAndCart.localPosition.y);
             craneRepositionSpeed = craneRepositionDuration > 0f ? distance / craneRepositionDuration : distance;
+            craneSource.clip = craneRepositioning;
+            craneSource.loop = true;
+            craneSource.Play();
             phase = Phase.Repositioning;
         }
 
@@ -325,8 +335,9 @@ namespace SiWoC.Stackopolis.BuildTower
 
         void Release(float angularVelocity)
         {
-            Rigidbody2D body = heldBlock.GetComponent<Rigidbody2D>();
-            heldBlock.transform.SetParent(null, true);
+            Block released = heldBlock;
+            Rigidbody2D body = released.GetComponent<Rigidbody2D>();
+            released.transform.SetParent(null, true);
 
             body.bodyType = RigidbodyType2D.Dynamic;
             float omega = angularVelocity * Mathf.Deg2Rad;
@@ -339,6 +350,7 @@ namespace SiWoC.Stackopolis.BuildTower
             fallStartTime = Time.time;
             settleQuietTime = 0f;
             contactSettling = false;
+            buildingSite.WatchDrop(released);
             ShowCable();
         }
 

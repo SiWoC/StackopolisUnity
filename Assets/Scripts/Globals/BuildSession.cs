@@ -12,12 +12,37 @@ namespace SiWoC.Stackopolis.Globals
 
         [SerializeField] GameMode gameMode = GameMode.Infinite;
         [SerializeField] TowerType towerTypeToBuild = TowerType.Residential;
+        [SerializeField] Difficulty difficulty = Difficulty.Hard;
         [Tooltip("Default theme for Build Tower. Assign on Boot; always available after Awake.")]
         [SerializeField] BuildingTheme currentTheme;
 
-        public GameMode GameMode => gameMode;
-        public TowerType TowerTypeToBuild => towerTypeToBuild;
-        public BuildingTheme CurrentTheme => currentTheme;
+        public GameMode GameMode
+        {
+            get => gameMode;
+            set => gameMode = value;
+        }
+
+        public TowerType TowerTypeToBuild
+        {
+            get => towerTypeToBuild;
+            set => towerTypeToBuild = value;
+        }
+
+        public Difficulty Difficulty
+        {
+            get => difficulty;
+            set => difficulty = value;
+        }
+
+        public BuildingTheme CurrentTheme
+        {
+            get => currentTheme;
+            set
+            {
+                if (value)
+                    currentTheme = value;
+            }
+        }
 
         void Awake()
         {
@@ -29,20 +54,6 @@ namespace SiWoC.Stackopolis.Globals
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
-        }
-
-        public void Configure(GameMode mode, TowerType towerType)
-        {
-            gameMode = mode;
-            towerTypeToBuild = towerType;
-        }
-
-        public void Configure(GameMode mode, TowerType towerType, BuildingTheme theme)
-        {
-            gameMode = mode;
-            towerTypeToBuild = towerType;
-            if (theme)
-                currentTheme = theme;
         }
     }
 }

@@ -17,21 +17,24 @@ namespace SiWoC.Stackopolis.BuildTower
 
         public event Action<Block> FellBelowValidY;
 
-        float validY;
+        Block support;
         float destroyBelowY;
         float fallSlack;
-        bool watchValidY;
+        bool watchSupport;
         bool watchDestroy;
         bool breached;
 
-        public float ValidY => validY;
+        /// <summary>
+        /// Floor this block landed on; null for the tower base.
+        /// </summary>
+        public Block Support => support;
 
-        public void ArmInTower(float validY, float destroyBelowY, float fallSlack)
+        public void ArmInTower(Block support, float destroyBelowY, float fallSlack)
         {
-            this.validY = validY;
+            this.support = support;
             this.destroyBelowY = destroyBelowY;
             this.fallSlack = fallSlack;
-            watchValidY = true;
+            watchSupport = support != null;
             watchDestroy = true;
             breached = false;
         }
@@ -39,7 +42,8 @@ namespace SiWoC.Stackopolis.BuildTower
         public void ArmDebris(float destroyBelowY)
         {
             this.destroyBelowY = destroyBelowY;
-            watchValidY = false;
+            support = null;
+            watchSupport = false;
             watchDestroy = true;
             breached = false;
             FellBelowValidY = null;
@@ -47,30 +51,34 @@ namespace SiWoC.Stackopolis.BuildTower
 
         public void Disarm()
         {
-            watchValidY = false;
+            support = null;
+            watchSupport = false;
             watchDestroy = false;
             FellBelowValidY = null;
         }
 
         public bool IsWithinValidY()
         {
-            return GetComponent<Collider2D>().bounds.min.y >= validY - fallSlack;
+            if (!support)
+                return true;
+
+            float bottom = GetComponent<Collider2D>().bounds.min.y;
+            float top = support.GetComponent<Collider2D>().bounds.max.y;
+            return bottom > top - fallSlack;
         }
 
         void FixedUpdate()
         {
-            if (!watchValidY && !watchDestroy)
+            if (!watchSupport && !watchDestroy)
                 return;
 
-            float y = GetComponent<Collider2D>().bounds.min.y;
-
-            if (watchValidY && !breached && y < validY - fallSlack)
+            if (watchSupport && !breached && !IsWithinValidY())
             {
                 breached = true;
                 FellBelowValidY?.Invoke(this);
             }
 
-            if (watchDestroy && y < destroyBelowY)
+            if (watchDestroy && GetComponent<Collider2D>().bounds.min.y < destroyBelowY)
             {
                 Disarm();
                 Destroy(gameObject);

@@ -10,12 +10,14 @@ namespace SiWoC.Stackopolis.BuildTower
         [SerializeField] BuildingSite buildingSite;
         [SerializeField] CameraFollow cameraFollow;
         [SerializeField] BackgroundSkyStack backgroundSkyStack;
+        [SerializeField] AmbientFlyerSpawner ambientFlyerSpawner;
         [SerializeField] GameObject startButton;
         [SerializeField] GameObject gameOverImage;
         [SerializeField] GameObject againButton;
         [SerializeField] GameObject bottomPanel;
         [SerializeField] TMP_Text highScoreText;
         [SerializeField] TMP_Text heightText;
+        [SerializeField] TMP_Text difficultyText;
         [SerializeField] GameObject[] backupBlocks;
 
         string heightFormat;
@@ -23,8 +25,12 @@ namespace SiWoC.Stackopolis.BuildTower
 
         void Awake()
         {
+            if (GameFlow.Instance == null || BuildSession.Instance == null)
+                Debug.LogError("GameFlow/BuildSession is missing. Play from the Boot scene.");
+
             heightFormat = heightText.text;
             highScoreFormat = highScoreText.text;
+            difficultyText.text = BuildSession.Instance.Difficulty.ToString();
             RefreshHighScoreText();
         }
 
@@ -57,8 +63,8 @@ namespace SiWoC.Stackopolis.BuildTower
             craneDriver.ResetRound();
             buildingSite.Reset();
             cameraFollow.ResetFollow();
-            if (backgroundSkyStack)
-                backgroundSkyStack.ResetStack();
+            backgroundSkyStack.ResetStack();
+            ambientFlyerSpawner.ResetSpawn();
             craneDriver.Begin();
         }
 
@@ -75,7 +81,7 @@ namespace SiWoC.Stackopolis.BuildTower
 
             if (status.GameOver)
             {
-                Settings.TrySetHighScoreFloors(status.Floors);
+                Settings.TrySetHighScoreFloors(status.Floors, BuildSession.Instance.Difficulty);
                 RefreshHighScoreText();
                 gameOverImage.SetActive(true);
                 againButton.SetActive(true);
@@ -85,7 +91,7 @@ namespace SiWoC.Stackopolis.BuildTower
 
         void RefreshHighScoreText()
         {
-            int floors = Settings.HighScoreFloors;
+            int floors = Settings.GetHighScoreFloors(BuildSession.Instance.Difficulty);
             int meters = Mathf.RoundToInt(floors * buildingSite.MetersPerFloor);
             highScoreText.text = string.Format(highScoreFormat, floors, meters);
         }
