@@ -164,6 +164,8 @@ namespace SiWoC.Stackopolis.BuildTower
                 RecordPlacedBlock(block.perfect);
                 if (block.perfect)
                 {
+                    if (block.type == BlockType.Middle)
+                        ApplyPerfectMiddleSprite(block);
                     PlayLanding(perfect);
                     if (perfectConfetti && under)
                         perfectConfetti.Burst(block, under);
@@ -648,6 +650,16 @@ namespace SiWoC.Stackopolis.BuildTower
             bool supported = bottom > top - supportOverlap;
             //Debug.Log($"IsSupported {block.name} on {under.name} bottom={bottom:0.000} top={top:0.000} overlap={supportOverlap} {supported}", block);
             return supported;
+        }
+
+        void ApplyPerfectMiddleSprite(Block block)
+        {
+            BuildSession session = BuildSession.Instance;
+            Sprite sprite = session.CurrentTheme.GetPerfectMiddle(session.TowerTypeToBuild);
+            if (!sprite)
+                return;
+
+            block.GetComponent<SpriteRenderer>().sprite = sprite;
         }
 
         bool IsPerfect(Block block, Block under)

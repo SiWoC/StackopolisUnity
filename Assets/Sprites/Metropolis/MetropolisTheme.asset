@@ -14,13 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SiWoC.Stackopolis.BuildTower.BuildingTheme
   themeName: Metropolis
   bottomSprites:
-  - {fileID: 21300000, guid: 3c2f7b559ba42b14988dc0e46c2b6cb7, type: 3}
+  - {fileID: 21300000, guid: 5130e6920a9c17c49a0a28f81747a4f4, type: 3}
   - {fileID: 21300000, guid: 2289883670c6d194aaeb610cf444e15e, type: 3}
   - {fileID: 21300000, guid: 578911b918fba194aa90f189db330479, type: 3}
   - {fileID: 21300000, guid: 2ddbb02b6e7a6534ab5ac24ea540dbd3, type: 3}
   middleSprites:
-  - {fileID: 21300000, guid: 1e9e24a64a1424444b2f31b4750c7947, type: 3}
   - {fileID: 21300000, guid: 591628464e7e9664fb0b4175dc9501d7, type: 3}
+  - {fileID: 21300000, guid: 7e389b641fa2f62448fa8d6cfb9cb02d, type: 3}
+  - {fileID: 21300000, guid: 1e9e24a64a1424444b2f31b4750c7947, type: 3}
+  - {fileID: 21300000, guid: 8a8a4271984f33740bdf31af2314122f, type: 3}
+  - {fileID: 21300000, guid: 55fadebe15f03b941bac1d41167f605e, type: 3}
+  - {fileID: 21300000, guid: 29ee739a257861d419978bab6da2e69b, type: 3}
+  - {fileID: 21300000, guid: f2c8ce99dfde0d143af636296d4737c8, type: 3}
+  - {fileID: 21300000, guid: 863bada27270c884b8d6c98222d382b0, type: 3}
+  - {fileID: 21300000, guid: 4e21462f006fcb24c9449d0da652b193, type: 3}
+  - {fileID: 21300000, guid: 7be0885fbc25774479ffec6ab00363ef, type: 3}
   roofSprites:
   - {fileID: 21300000, guid: d1d910d07d7f147429684e07dda814c8, type: 3}
   residentialBottomIndex: 0
@@ -28,13 +36,19 @@ MonoBehaviour:
   officeBottomIndex: 2
   luxuryBottomIndex: 3
   residentialMiddleIndex: 0
+  residentialMiddlePerfectIndex: 5
   commercialMiddleIndex: 1
+  commercialMiddlePerfectIndex: 6
+  commercialMiddleAlternateIndex: 4
+  commercialMiddleAlternatePerfectIndex: 7
   officeMiddleIndex: 2
+  officeMiddlePerfectIndex: 8
   luxuryMiddleIndex: 3
+  luxuryMiddlePerfectIndex: 9
   residentialRoofIndex: 0
-  commercialRoofIndex: 1
-  officeRoofIndex: 2
-  luxuryRoofIndex: 3
+  commercialRoofIndex: 0
+  officeRoofIndex: 0
+  luxuryRoofIndex: 0
   propSprites: []
   background: {fileID: 21300000, guid: 1e652ebe11c3cd5428356e914db84444, type: 3}
   gradient1: {fileID: 21300000, guid: bf13b976a8d122b418808b42c3f1b06f, type: 3}

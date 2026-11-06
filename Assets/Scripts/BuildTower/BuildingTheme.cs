@@ -19,13 +19,21 @@ namespace SiWoC.Stackopolis.BuildTower
         public int officeBottomIndex = 2;
         public int luxuryBottomIndex = 3;
         public int residentialMiddleIndex = 0;
+        public int residentialMiddlePerfectIndex = -1;
         public int commercialMiddleIndex = 1;
+        public int commercialMiddlePerfectIndex = -1;
+        public int commercialMiddleAlternateIndex = 4;
+        public int commercialMiddleAlternatePerfectIndex = -1;
         public int officeMiddleIndex = 2;
+        public int officeMiddlePerfectIndex = -1;
         public int luxuryMiddleIndex = 3;
+        public int luxuryMiddlePerfectIndex = -1;
         public int residentialRoofIndex = 0;
         public int commercialRoofIndex = 1;
         public int officeRoofIndex = 2;
         public int luxuryRoofIndex = 3;
+
+        int previousMiddleIndex;
 
         [Header("Optional Props")]
         public Sprite[] propSprites;
@@ -53,6 +61,7 @@ namespace SiWoC.Stackopolis.BuildTower
 
         public Sprite GetBottom(TowerType towerType) => GetBottom(BottomIndex(towerType));
         public Sprite GetMiddle(TowerType towerType) => GetMiddle(MiddleIndex(towerType));
+        public Sprite GetPerfectMiddle(TowerType towerType) => GetMiddle(PerfectMiddleIndex(towerType));
         public Sprite GetRoof(TowerType towerType) => GetRoof(RoofIndex(towerType));
 
         int BottomIndex(TowerType towerType) => towerType switch
@@ -64,14 +73,45 @@ namespace SiWoC.Stackopolis.BuildTower
             _ => residentialBottomIndex
         };
 
-        int MiddleIndex(TowerType towerType) => towerType switch
+        int MiddleIndex(TowerType towerType)
         {
-            TowerType.Residential => residentialMiddleIndex,
-            TowerType.Commercial => commercialMiddleIndex,
-            TowerType.Office => officeMiddleIndex,
-            TowerType.Luxury => luxuryMiddleIndex,
-            _ => residentialMiddleIndex
-        };
+            switch (towerType)
+            {
+                case TowerType.Residential:
+                    return residentialMiddleIndex;
+                case TowerType.Commercial:
+                    int next = previousMiddleIndex == commercialMiddleAlternateIndex
+                        ? commercialMiddleIndex
+                        : commercialMiddleAlternateIndex;
+                    previousMiddleIndex = next;
+                    return next;
+                case TowerType.Office:
+                    return officeMiddleIndex;
+                case TowerType.Luxury:
+                    return luxuryMiddleIndex;
+                default:
+                    return residentialMiddleIndex;
+            }
+        }
+
+        int PerfectMiddleIndex(TowerType towerType)
+        {
+            switch (towerType)
+            {
+                case TowerType.Residential:
+                    return residentialMiddlePerfectIndex;
+                case TowerType.Commercial:
+                    return previousMiddleIndex == commercialMiddleAlternateIndex
+                        ? commercialMiddleAlternatePerfectIndex
+                        : commercialMiddlePerfectIndex;
+                case TowerType.Office:
+                    return officeMiddlePerfectIndex;
+                case TowerType.Luxury:
+                    return luxuryMiddlePerfectIndex;
+                default:
+                    return residentialMiddlePerfectIndex;
+            }
+        }
 
         int RoofIndex(TowerType towerType) => towerType switch
         {
