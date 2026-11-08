@@ -30,7 +30,7 @@ namespace SiWoC.Stackopolis.BuildTower
 
             heightFormat = heightText.text;
             highScoreFormat = highScoreText.text;
-            difficultyText.text = BuildSession.Instance.Difficulty.ToString();
+            difficultyText.text = BuildSession.Instance.EffectiveDifficulty.ToString();
             RefreshHighScoreText();
         }
 
@@ -75,13 +75,13 @@ namespace SiWoC.Stackopolis.BuildTower
 
         void OnTowerStatusChanged(TowerStatus status)
         {
-            heightText.text = string.Format(heightFormat, status.Floors, Mathf.RoundToInt(status.Meters));
+            heightText.text = string.Format(heightFormat, status.Floors, Mathf.RoundToInt(status.Meters), status.Population);
             for (int i = 0; i < backupBlocks.Length; i++)
                 backupBlocks[i].SetActive(i < status.LivesRemaining);
 
             if (status.GameOver)
             {
-                Settings.TrySetHighScoreFloors(status.Floors, BuildSession.Instance.Difficulty);
+                Settings.TrySetHighScoreFloors(status.Floors, status.Population, BuildSession.Instance.EffectiveDifficulty);
                 RefreshHighScoreText();
                 gameOverImage.SetActive(true);
                 againButton.SetActive(true);
@@ -91,9 +91,11 @@ namespace SiWoC.Stackopolis.BuildTower
 
         void RefreshHighScoreText()
         {
-            int floors = Settings.GetHighScoreFloors(BuildSession.Instance.Difficulty);
+            Difficulty difficulty = BuildSession.Instance.EffectiveDifficulty;
+            int floors = Settings.GetHighScoreFloors(difficulty);
             int meters = Mathf.RoundToInt(floors * buildingSite.MetersPerFloor);
-            highScoreText.text = string.Format(highScoreFormat, floors, meters);
+            int population = Settings.GetHighScorePopulation(difficulty);
+            highScoreText.text = string.Format(highScoreFormat, floors, meters, population);
         }
     }
 }

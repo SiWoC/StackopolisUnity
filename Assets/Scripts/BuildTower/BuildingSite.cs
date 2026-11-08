@@ -12,14 +12,16 @@ namespace SiWoC.Stackopolis.BuildTower
         public readonly int FallenFloors;
         public readonly int LivesRemaining;
         public readonly bool GameOver;
+        public readonly int Population;
 
-        public TowerStatus(int floors, float meters, int fallenFloors, int livesRemaining, bool gameOver)
+        public TowerStatus(int floors, float meters, int fallenFloors, int livesRemaining, bool gameOver, int population)
         {
             Floors = floors;
             Meters = meters;
             FallenFloors = fallenFloors;
             LivesRemaining = livesRemaining;
             GameOver = gameOver;
+            Population = population;
         }
     }
 
@@ -27,6 +29,11 @@ namespace SiWoC.Stackopolis.BuildTower
     {
         [SerializeField] float perfectSlack = 0.1f;
         [SerializeField] float supportOverlap = 0.4f;
+        [Header("Population")]
+        [SerializeField] int perfectPopulation = 10;
+        [SerializeField] int edgePopulation = 1;
+        [Tooltip("Center offset, as a fraction of the floor width, that scores edgePopulation.")]
+        [SerializeField] float edgeOverhang = 0.5f;
         [SerializeField] int fallenLimit = 3;
         [SerializeField] float metersPerFloor = 3f;
         [SerializeField] int swayTopCount = 5;
@@ -50,6 +57,7 @@ namespace SiWoC.Stackopolis.BuildTower
         readonly List<Block> tower = new List<Block>();
         readonly HashSet<Block> pendingFallen = new HashSet<Block>();
         int fallenFloors;
+        int population;
         bool gameOver;
         bool collapsePending;
         float collapseQuietUntil;
@@ -68,7 +76,7 @@ namespace SiWoC.Stackopolis.BuildTower
         public TowerStatus Status => BuildStatus();
         public Block Top => tower.Count > 0 ? tower[tower.Count - 1] : null;
 
-        Difficulty ActiveDifficulty => BuildSession.Instance.Difficulty;
+        Difficulty ActiveDifficulty => BuildSession.Instance.EffectiveDifficulty;
         public event Action<TowerStatus> StatusChanged;
         public event Action CollapseSettled;
 
@@ -92,6 +100,7 @@ namespace SiWoC.Stackopolis.BuildTower
             tower.Clear();
             pendingFallen.Clear();
             fallenFloors = 0;
+            population = 0;
             gameOver = false;
             collapsePending = false;
             dropping = null;
@@ -157,7 +166,9 @@ namespace SiWoC.Stackopolis.BuildTower
                         SnapPerfectX(block, under);
                 }
 
-                Debug.Log($"Tower add {block.name} {block.type} perfect={block.perfect} count={tower.Count + 1} fallen={fallenFloors}", block);
+                Collider2D support = under ? under.GetComponent<Collider2D>() : dropZone;
+                population += PopulationFor(block, support);
+                Debug.Log($"Tower add {block.name} {block.type} perfect={block.perfect} count={tower.Count + 1} fallen={fallenFloors} population={population}", block);
                 tower.Add(block);
                 block.FellBelowValidY += OnBlockFellBelowValidY;
                 block.ArmInTower(under, dropZone.bounds.min.y, supportOverlap);
@@ -613,7 +624,7 @@ namespace SiWoC.Stackopolis.BuildTower
         {
             int floors = tower.Count;
             int lives = Mathf.Max(0, fallenLimit - fallenFloors);
-            return new TowerStatus(floors, floors * metersPerFloor, fallenFloors, lives, gameOver);
+            return new TowerStatus(floors, floors * metersPerFloor, fallenFloors, lives, gameOver, population);
         }
 
         void PruneFallen()
@@ -660,6 +671,21 @@ namespace SiWoC.Stackopolis.BuildTower
                 return;
 
             block.GetComponent<SpriteRenderer>().sprite = sprite;
+        }
+
+        int PopulationFor(Block block, Collider2D support)
+        {
+            Collider2D dropped = block.GetComponent<Collider2D>();
+            float offset = Mathf.Abs(dropped.bounds.center.x - support.bounds.center.x);
+            if (offset <= perfectSlack)
+                return perfectPopulation;
+
+            float edgeOffset = dropped.bounds.size.x * edgeOverhang;
+            if (edgeOffset <= perfectSlack || offset >= edgeOffset)
+                return edgePopulation;
+
+            float t = Mathf.InverseLerp(perfectSlack, edgeOffset, offset);
+            return Mathf.FloorToInt(Mathf.Lerp(perfectPopulation, edgePopulation, t));
         }
 
         bool IsPerfect(Block block, Block under)

@@ -16,6 +16,12 @@ namespace SiWoC.Stackopolis.Globals
         [Tooltip("Default theme for Build Tower. Assign on Boot; always available after Awake.")]
         [SerializeField] BuildingTheme currentTheme;
 
+        /// <summary>
+        /// When true, the chosen <see cref="Difficulty"/> applies (Infinite).
+        /// When false, the run uses Hard (Classic for now).
+        /// </summary>
+        public bool DifficultyActive { get; private set; } = true;
+
         public GameMode GameMode
         {
             get => gameMode;
@@ -31,8 +37,18 @@ namespace SiWoC.Stackopolis.Globals
         public Difficulty Difficulty
         {
             get => difficulty;
-            set => difficulty = value;
+            set
+            {
+                difficulty = value;
+                Settings.SetDifficulty(value);
+            }
         }
+
+        /// <summary>
+        /// Difficulty used by the run: the chosen value when <see cref="DifficultyActive"/>, otherwise Hard.
+        /// </summary>
+        public Difficulty EffectiveDifficulty =>
+            DifficultyActive ? difficulty : Difficulty.Hard;
 
         public BuildingTheme CurrentTheme
         {
@@ -54,6 +70,21 @@ namespace SiWoC.Stackopolis.Globals
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            difficulty = Settings.GetDifficulty();
+        }
+
+        public void PrepareInfinite()
+        {
+            gameMode = GameMode.Infinite;
+            DifficultyActive = true;
+            difficulty = Settings.GetDifficulty();
+        }
+
+        public void PrepareClassic()
+        {
+            gameMode = GameMode.Classic;
+            DifficultyActive = false;
+            difficulty = Difficulty.Hard;
         }
     }
 }
