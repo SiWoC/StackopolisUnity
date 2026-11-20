@@ -60,6 +60,24 @@ namespace SiWoC.Stackopolis.Globals
             }
         }
 
+        public bool HasPendingTower { get; private set; }
+
+        public PendingTower PendingTower { get; private set; }
+
+        public void SetPendingTower(TowerType towerType, int floors, int population, bool hasRoof)
+        {
+            PendingTower = new PendingTower(towerType, floors, population, hasRoof);
+            HasPendingTower = true;
+            Settings.SaveClassicPending(towerType, floors, population, hasRoof);
+        }
+
+        public void ClearPendingTower()
+        {
+            HasPendingTower = false;
+            PendingTower = default;
+            Settings.ClearClassicPending();
+        }
+
         void Awake()
         {
             if (Instance != null && Instance != this)
@@ -71,6 +89,12 @@ namespace SiWoC.Stackopolis.Globals
             Instance = this;
             DontDestroyOnLoad(gameObject);
             difficulty = Settings.GetDifficulty();
+
+            if (Settings.TryLoadClassicPending(out PendingTower pending))
+            {
+                PendingTower = pending;
+                HasPendingTower = true;
+            }
         }
 
         public void PrepareInfinite()

@@ -7,6 +7,9 @@ namespace SiWoC.Stackopolis.Globals
         const string PrefHighScoreFloors = "HighScoreFloors";
         const string PrefHighScorePopulation = "HighScorePopulation";
         const string PrefDifficulty = "Difficulty";
+        const string PrefClassicCity = "ClassicCity";
+        const string PrefClassicPending = "ClassicPending";
+        const string PrefClassicPendingHas = "ClassicPendingHas";
 
         public static Difficulty GetDifficulty()
         {
@@ -43,6 +46,49 @@ namespace SiWoC.Stackopolis.Globals
             PlayerPrefs.SetInt(PrefHighScoreFloors + difficulty, floors);
             PlayerPrefs.SetInt(PrefHighScorePopulation + difficulty, population);
             PlayerPrefs.Save();
+            return true;
+        }
+
+        public static void SaveClassicCity(string json)
+        {
+            PlayerPrefs.SetString(PrefClassicCity, json);
+            PlayerPrefs.Save();
+        }
+
+        public static string LoadClassicCityJson()
+        {
+            return PlayerPrefs.GetString(PrefClassicCity, string.Empty);
+        }
+
+        public static void SaveClassicPending(TowerType towerType, int floors, int population, bool hasRoof)
+        {
+            PlayerPrefs.SetInt(PrefClassicPendingHas, 1);
+            PlayerPrefs.SetInt(PrefClassicPending + "Type", (int)towerType);
+            PlayerPrefs.SetInt(PrefClassicPending + "Floors", floors);
+            PlayerPrefs.SetInt(PrefClassicPending + "Population", population);
+            PlayerPrefs.SetInt(PrefClassicPending + "HasRoof", hasRoof ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+
+        public static void ClearClassicPending()
+        {
+            PlayerPrefs.SetInt(PrefClassicPendingHas, 0);
+            PlayerPrefs.Save();
+        }
+
+        public static bool TryLoadClassicPending(out PendingTower pending)
+        {
+            if (PlayerPrefs.GetInt(PrefClassicPendingHas, 0) == 0)
+            {
+                pending = default;
+                return false;
+            }
+
+            pending = new PendingTower(
+                (TowerType)PlayerPrefs.GetInt(PrefClassicPending + "Type", 0),
+                PlayerPrefs.GetInt(PrefClassicPending + "Floors", 0),
+                PlayerPrefs.GetInt(PrefClassicPending + "Population", 0),
+                PlayerPrefs.GetInt(PrefClassicPending + "HasRoof", 0) != 0);
             return true;
         }
     }

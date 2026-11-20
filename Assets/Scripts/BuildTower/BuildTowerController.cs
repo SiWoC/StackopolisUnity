@@ -13,8 +13,10 @@ namespace SiWoC.Stackopolis.BuildTower
         [SerializeField] AmbientFlyerSpawner ambientFlyerSpawner;
         [SerializeField] GameObject startButton;
         [SerializeField] GameObject gameOverImage;
-        [SerializeField] GameObject againButton;
+        [SerializeField] GameObject finishActionButton;
+        [SerializeField] TMP_Text finishActionButtonText;
         [SerializeField] GameObject bottomPanel;
+        [SerializeField] GameObject highScorePanel;
         [SerializeField] TMP_Text highScoreText;
         [SerializeField] TMP_Text heightText;
         [SerializeField] TMP_Text difficultyText;
@@ -49,8 +51,18 @@ namespace SiWoC.Stackopolis.BuildTower
         {
             startButton.SetActive(true);
             gameOverImage.SetActive(false);
-            againButton.SetActive(false);
+            finishActionButton.SetActive(false);
             bottomPanel.SetActive(true);
+            if (BuildSession.Instance.GameMode == GameMode.Infinite)
+            {
+                finishActionButtonText.text = "Again";
+                highScorePanel.SetActive(true);
+            }
+            else
+            {
+                finishActionButtonText.text = "Place Tower";
+                highScorePanel.SetActive(false);
+            }
             OnTowerStatusChanged(buildingSite.Status);
         }
 
@@ -58,7 +70,7 @@ namespace SiWoC.Stackopolis.BuildTower
         {
             startButton.SetActive(false);
             gameOverImage.SetActive(false);
-            againButton.SetActive(false);
+            finishActionButton.SetActive(false);
             bottomPanel.SetActive(false);
             craneDriver.ResetRound();
             buildingSite.Reset();
@@ -79,13 +91,55 @@ namespace SiWoC.Stackopolis.BuildTower
             for (int i = 0; i < backupBlocks.Length; i++)
                 backupBlocks[i].SetActive(i < status.LivesRemaining);
 
+            if (status.Finished)
+            {
+                TryStoreClassicPending(status);
+                gameOverImage.SetActive(false);
+                finishActionButton.SetActive(true);
+                bottomPanel.SetActive(true);
+                return;
+            }
+
             if (status.GameOver)
             {
-                Settings.TrySetHighScoreFloors(status.Floors, status.Population, BuildSession.Instance.EffectiveDifficulty);
-                RefreshHighScoreText();
+                if (BuildSession.Instance.GameMode == GameMode.Infinite)
+                {
+                    Settings.TrySetHighScoreFloors(status.Floors, status.Population, BuildSession.Instance.EffectiveDifficulty);
+                    RefreshHighScoreText();
+                }
+                else
+                {
+                    TryStoreClassicPending(status);
+                }
+
                 gameOverImage.SetActive(true);
-                againButton.SetActive(true);
+                finishActionButton.SetActive(true);
                 bottomPanel.SetActive(true);
+            }
+        }
+
+        void TryStoreClassicPending(TowerStatus status)
+        {
+            if (BuildSession.Instance.GameMode != GameMode.Classic || status.Floors <= 0)
+                return;
+
+            bool hasRoof = buildingSite.Top && buildingSite.Top.type == BlockType.Roof;
+            BuildSession.Instance.SetPendingTower(
+                BuildSession.Instance.TowerTypeToBuild,
+                status.Floors,
+                status.Population,
+                hasRoof);
+        }
+
+        public void OnFinishAction()
+        {
+            if (BuildSession.Instance.GameMode == GameMode.Classic)
+            {
+                GameFlow.Instance.Back();
+            }
+            else
+            {
+                OnStart();
             }
         }
 

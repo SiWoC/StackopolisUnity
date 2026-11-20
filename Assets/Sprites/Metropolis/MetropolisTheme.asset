@@ -30,7 +30,10 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 4e21462f006fcb24c9449d0da652b193, type: 3}
   - {fileID: 21300000, guid: 7be0885fbc25774479ffec6ab00363ef, type: 3}
   roofSprites:
+  - {fileID: 21300000, guid: c1fa2667a0e702c47af54c5fb01566fb, type: 3}
   - {fileID: 21300000, guid: d1d910d07d7f147429684e07dda814c8, type: 3}
+  - {fileID: 21300000, guid: c25553e44d239824fb4441c31fdefaaf, type: 3}
+  - {fileID: 21300000, guid: 75e99530392aacc408ad38398019d343, type: 3}
   residentialBottomIndex: 0
   commercialBottomIndex: 1
   officeBottomIndex: 2
@@ -46,9 +49,9 @@ MonoBehaviour:
   luxuryMiddleIndex: 3
   luxuryMiddlePerfectIndex: 9
   residentialRoofIndex: 0
-  commercialRoofIndex: 0
-  officeRoofIndex: 0
-  luxuryRoofIndex: 0
+  commercialRoofIndex: 1
+  officeRoofIndex: 2
+  luxuryRoofIndex: 3
   propSprites: []
   background: {fileID: 21300000, guid: 1e652ebe11c3cd5428356e914db84444, type: 3}
   gradient1: {fileID: 21300000, guid: bf13b976a8d122b418808b42c3f1b06f, type: 3}

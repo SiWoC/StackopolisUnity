@@ -7,7 +7,7 @@ namespace SiWoC.Stackopolis.BuildTower
     /// Spawns and despawns using full sprite bounds.
     /// Plays <see cref="cry"/> once, at a random moment from first visibility until the sprite center has crossed <see cref="cryAcross"/> of the view width.
     /// </summary>
-    public class SeagullFlyer : MonoBehaviour
+    public class SeagullFlyer : AmbientFlyer
     {
         [SerializeField] float edgeMargin = 0.25f;
         [Header("Cry")]
@@ -34,7 +34,7 @@ namespace SiWoC.Stackopolis.BuildTower
 
         /// <param name="directionSign">1 = left→right, -1 = right→left.</param>
         /// <param name="spawnY">World Y for the transform; X is placed so the whole sprite is off-screen.</param>
-        public void Launch(int directionSign, float speed, Camera viewCamera, float spawnY)
+        public override void Launch(int directionSign, float speed, Camera viewCamera, float spawnY)
         {
             this.directionSign = directionSign >= 0 ? 1 : -1;
             this.speed = Mathf.Max(0.01f, speed);

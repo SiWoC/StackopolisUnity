@@ -6,7 +6,7 @@ namespace SiWoC.Stackopolis.BuildTower
     /// Moves along a climb matching the baked plane art (default 159 right, 123 up).
     /// Flip with scale.x; no runtime rotation. Spawns and despawns using full sprite bounds.
     /// </summary>
-    public class PlaneFlyer : MonoBehaviour
+    public class PlaneFlyer : AmbientFlyer
     {
         [Tooltip("World delta for a rightward flight. Leftward uses (-x, y).")]
         [SerializeField] Vector2 climb = new(159f, 123f);
@@ -28,7 +28,7 @@ namespace SiWoC.Stackopolis.BuildTower
 
         /// <param name="directionSign">1 = left→right, -1 = right→left.</param>
         /// <param name="spawnY">World Y for the transform; X is placed so the whole sprite is off-screen.</param>
-        public void Launch(int directionSign, float speed, Camera viewCamera, float spawnY)
+        public override void Launch(int directionSign, float speed, Camera viewCamera, float spawnY)
         {
             this.directionSign = directionSign >= 0 ? 1 : -1;
             this.speed = Mathf.Max(0.01f, speed);

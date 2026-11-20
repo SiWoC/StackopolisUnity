@@ -1,3 +1,4 @@
+using SiWoC.Stackopolis.Globals;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -46,6 +47,11 @@ namespace SiWoC.Stackopolis.BuildTower
         [SerializeField] float settleDwellTime = 0.2f;
         [SerializeField] float contactSettleDelay = 0.25f;
         [SerializeField] float settleTimeout = 2f;
+        [Tooltip("Classic: middles to place after the bottom before the roof.")]
+        [SerializeField] int residentialMiddleCount = 10;
+        [SerializeField] int commercialMiddleCount = 20;
+        [SerializeField] int officeMiddleCount = 30;
+        [SerializeField] int luxuryMiddleCount = 40;
 
         Phase phase;
         float coastAngle;
@@ -121,9 +127,9 @@ namespace SiWoC.Stackopolis.BuildTower
 
         void OnCollapseSettled()
         {
-            if (buildingSite.GameOver)
+            if (RoundEnded())
             {
-                FinishGameOverMotion();
+                FinishRoundMotion();
                 return;
             }
 
@@ -134,11 +140,13 @@ namespace SiWoC.Stackopolis.BuildTower
             BeginReposition();
         }
 
-        void FinishGameOverMotion()
+        void FinishRoundMotion()
         {
             coastAfterReposition = true;
             BeginReposition();
         }
+
+        bool RoundEnded() => buildingSite.GameOver || buildingSite.Finished;
 
         void Update()
         {
@@ -188,7 +196,7 @@ namespace SiWoC.Stackopolis.BuildTower
 
             craneSource.Stop();
 
-            if (coastAfterReposition || buildingSite.GameOver)
+            if (coastAfterReposition || RoundEnded())
             {
                 coastAfterReposition = false;
                 BeginCoast();
@@ -196,7 +204,7 @@ namespace SiWoC.Stackopolis.BuildTower
             }
 
             if (heldBlock == null)
-                Attach(blockFactory.CreateMiddle());
+                Attach(CreateNextBlock());
             phase = Phase.Swinging;
         }
 
@@ -361,20 +369,46 @@ namespace SiWoC.Stackopolis.BuildTower
             settleQuietTime = 0f;
             contactSettling = false;
 
-            int floorsBefore = buildingSite.Status.Floors;
             buildingSite.Receive(block);
             if (buildingSite.GameOver)
             {
-                FinishGameOverMotion();
+                FinishRoundMotion();
                 return;
             }
 
-            int floorsAfter = buildingSite.Status.Floors;
-            if (floorsAfter != floorsBefore)
+            bool placed = buildingSite.Top == block;
+            if (placed
+                && BuildSession.Instance.GameMode == GameMode.Classic
+                && block.type == BlockType.Roof)
+            {
+                buildingSite.MarkFinished();
+                FinishRoundMotion();
+                return;
+            }
+
+            if (placed)
                 BeginReposition();
             else
-                Attach(blockFactory.CreateMiddle());
+                Attach(CreateNextBlock());
         }
+
+        Block CreateNextBlock()
+        {
+            if (BuildSession.Instance.GameMode == GameMode.Classic
+                && buildingSite.Status.Floors >= 1 + ClassicMiddleCount())
+                return blockFactory.CreateRoof();
+
+            return blockFactory.CreateMiddle();
+        }
+
+        int ClassicMiddleCount() => BuildSession.Instance.TowerTypeToBuild switch
+        {
+            TowerType.Residential => residentialMiddleCount,
+            TowerType.Commercial => commercialMiddleCount,
+            TowerType.Office => officeMiddleCount,
+            TowerType.Luxury => luxuryMiddleCount,
+            _ => residentialMiddleCount
+        };
 
         void Attach(Block block)
         {

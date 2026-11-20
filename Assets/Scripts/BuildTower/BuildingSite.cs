@@ -12,15 +12,17 @@ namespace SiWoC.Stackopolis.BuildTower
         public readonly int FallenFloors;
         public readonly int LivesRemaining;
         public readonly bool GameOver;
+        public readonly bool Finished;
         public readonly int Population;
 
-        public TowerStatus(int floors, float meters, int fallenFloors, int livesRemaining, bool gameOver, int population)
+        public TowerStatus(int floors, float meters, int fallenFloors, int livesRemaining, bool gameOver, bool finished, int population)
         {
             Floors = floors;
             Meters = meters;
             FallenFloors = fallenFloors;
             LivesRemaining = livesRemaining;
             GameOver = gameOver;
+            Finished = finished;
             Population = population;
         }
     }
@@ -59,6 +61,7 @@ namespace SiWoC.Stackopolis.BuildTower
         int fallenFloors;
         int population;
         bool gameOver;
+        bool finished;
         bool collapsePending;
         float collapseQuietUntil;
         int swayWindow;
@@ -72,6 +75,7 @@ namespace SiWoC.Stackopolis.BuildTower
         readonly List<ContactPoint2D> contacts = new List<ContactPoint2D>();
 
         public bool GameOver => gameOver;
+        public bool Finished => finished;
         public float MetersPerFloor => metersPerFloor;
         public TowerStatus Status => BuildStatus();
         public Block Top => tower.Count > 0 ? tower[tower.Count - 1] : null;
@@ -102,6 +106,7 @@ namespace SiWoC.Stackopolis.BuildTower
             fallenFloors = 0;
             population = 0;
             gameOver = false;
+            finished = false;
             collapsePending = false;
             dropping = null;
             placePlayed = false;
@@ -131,7 +136,7 @@ namespace SiWoC.Stackopolis.BuildTower
 
         public void Receive(Block block)
         {
-            if (gameOver)
+            if (gameOver || finished)
             {
                 dropping = null;
                 WatchGround(block);
@@ -178,8 +183,7 @@ namespace SiWoC.Stackopolis.BuildTower
                     if (block.type == BlockType.Middle)
                         ApplyPerfectMiddleSprite(block);
                     PlayLanding(perfect);
-                    if (perfectConfetti && under)
-                        perfectConfetti.Burst(block, under);
+                    perfectConfetti.Burst(block, under);
                 }
             }
             else
@@ -205,7 +209,7 @@ namespace SiWoC.Stackopolis.BuildTower
             WatchDroppingBlock();
             WatchGroundLandings();
 
-            if (!collapsePending || gameOver)
+            if (!collapsePending || gameOver || finished)
                 return;
 
             if (Time.time < collapseQuietUntil)
@@ -620,11 +624,30 @@ namespace SiWoC.Stackopolis.BuildTower
             Debug.Log($"Sway {reason} {ActiveDifficulty} streak={perfectStreak} window={swayWindow} next={nextGrowthFloor} floors={tower.Count}", this);
         }
 
+        /// <summary>
+        /// Ends a Classic build successfully (roof placed). Freezes the standing tower.
+        /// </summary>
+        public void MarkFinished()
+        {
+            if (finished || gameOver)
+                return;
+
+            finished = true;
+            FreezeRemainingTower();
+            StatusChanged?.Invoke(BuildStatus());
+        }
+
         TowerStatus BuildStatus()
         {
-            int floors = tower.Count;
+            int floors = 0;
+            for (int i = 0; i < tower.Count; i++)
+            {
+                if (tower[i].type != BlockType.Roof)
+                    floors++;
+            }
+
             int lives = Mathf.Max(0, fallenLimit - fallenFloors);
-            return new TowerStatus(floors, floors * metersPerFloor, fallenFloors, lives, gameOver, population);
+            return new TowerStatus(floors, floors * metersPerFloor, fallenFloors, lives, gameOver, finished, population);
         }
 
         void PruneFallen()
@@ -675,6 +698,9 @@ namespace SiWoC.Stackopolis.BuildTower
 
         int PopulationFor(Block block, Collider2D support)
         {
+            if (block.type == BlockType.Roof)
+                return 0;
+
             Collider2D dropped = block.GetComponent<Collider2D>();
             float offset = Mathf.Abs(dropped.bounds.center.x - support.bounds.center.x);
             if (offset <= perfectSlack)

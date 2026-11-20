@@ -7,6 +7,7 @@ namespace SiWoC.Stackopolis.MainMenu
     public class MainMenuController : MonoBehaviour
     {
         [SerializeField] string buildTowerSceneName = "BuildTower";
+        [SerializeField] string classicGridSceneName = "ClassicGrid";
         [SerializeField] GameObject difficultyBlur;
         [SerializeField] Toggle difficultyEasy;
         [SerializeField] Toggle difficultyMedium;
@@ -48,7 +49,7 @@ namespace SiWoC.Stackopolis.MainMenu
         public void OnClassic()
         {
             BuildSession.Instance.PrepareClassic();
-            OnGo();
+            GameFlow.Instance.Forward(classicGridSceneName);
         }
 
         public void OnGo()

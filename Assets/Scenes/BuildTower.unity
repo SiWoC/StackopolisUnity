@@ -429,7 +429,7 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 0
   m_fontSizeMax: 400
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -504,14 +504,14 @@ RectTransform:
   m_GameObject: {fileID: 192254536}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
+  m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 852430327}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -200}
   m_SizeDelta: {x: 554, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &192254538
@@ -774,7 +774,7 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 0
   m_fontSizeMax: 400
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -1964,7 +1964,7 @@ GameObject:
   - component: {fileID: 1041523608}
   - component: {fileID: 1041523607}
   m_Layer: 5
-  m_Name: AgainButton
+  m_Name: FinsihActionButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1987,7 +1987,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 540, y: 740}
+  m_AnchoredPosition: {x: 540, y: 1100}
   m_SizeDelta: {x: 920, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1041523607
@@ -2058,7 +2058,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1830878750}
         m_TargetAssemblyTypeName: SiWoC.Stackopolis.BuildTower.BuildTowerController, Assembly-CSharp
-        m_MethodName: OnStart
+        m_MethodName: OnFinishAction
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3036,6 +3036,10 @@ MonoBehaviour:
   settleDwellTime: 0.2
   contactSettleDelay: 0.25
   settleTimeout: 2
+  residentialMiddleCount: 10
+  commercialMiddleCount: 20
+  officeMiddleCount: 30
+  luxuryMiddleCount: 40
 --- !u!82 &1402563133
 AudioSource:
   m_ObjectHideFlags: 0
@@ -3223,7 +3227,7 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 0
   m_fontSizeMax: 400
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -3527,15 +3531,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8054cfbd2219d8c4d964d191a73b2e4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SiWoC.Stackopolis.BuildTower.AmbientFlyerSpawner
-  seagullPrefab: {fileID: -6956511726769931588, guid: e464bb57982f5a34ab20d4753c362c2b, type: 3}
-  planePrefab: {fileID: -1885879086900342986, guid: c8ace2fd3f3b7fc4f9eb03783afdabb5, type: 3}
   minInterval: 18
   maxInterval: 30
-  planeChance: 0.35
-  seagullSpeedMin: 1.5
-  seagullSpeedMax: 3
-  planeSpeedMin: 0.5
-  planeSpeedMax: 1
+  altitudeFlyers:
+  - prefab: {fileID: -6956511726769931588, guid: e464bb57982f5a34ab20d4753c362c2b, type: 3}
+    weight: 0.65
+    speedMin: 1.5
+    speedMax: 3
+    hasMinHeight: 0
+    minHeight: 0
+    hasMaxHeight: 0
+    maxHeight: 50
+  - prefab: {fileID: -1885879086900342986, guid: c8ace2fd3f3b7fc4f9eb03783afdabb5, type: 3}
+    weight: 0.35
+    speedMin: 0.5
+    speedMax: 1
+    hasMinHeight: 0
+    minHeight: 0
+    hasMaxHeight: 0
+    maxHeight: 70
   viewCamera: {fileID: 519420031}
 --- !u!4 &1639334007
 Transform:
@@ -3642,7 +3656,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -4071,8 +4085,10 @@ MonoBehaviour:
   ambientFlyerSpawner: {fileID: 1639334006}
   startButton: {fileID: 192254536}
   gameOverImage: {fileID: 1044719106}
-  againButton: {fileID: 1041523605}
+  finishActionButton: {fileID: 1041523605}
+  finishActionButtonText: {fileID: 133455568}
   bottomPanel: {fileID: 1337076805}
+  highScorePanel: {fileID: 225983385}
   highScoreText: {fileID: 1728253395}
   heightText: {fileID: 1324931078}
   difficultyText: {fileID: 1674051833}

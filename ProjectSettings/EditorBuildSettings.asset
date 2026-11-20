@@ -14,5 +14,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/BuildTower.unity
     guid: ad31e6180da3b5f499f53ec77398fae7
+  - enabled: 1
+    path: Assets/Scenes/ClassicGrid.unity
+    guid: e03931b89d2f5884e966daae235ec5d7
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
