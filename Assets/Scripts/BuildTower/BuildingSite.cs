@@ -34,6 +34,7 @@ namespace SiWoC.Stackopolis.BuildTower
         [Header("Population")]
         [SerializeField] int perfectPopulation = 10;
         [SerializeField] int edgePopulation = 1;
+        [SerializeField] PopulationSpawner populationSpawner;
         [Tooltip("Center offset, as a fraction of the floor width, that scores edgePopulation.")]
         [SerializeField] float edgeOverhang = 0.5f;
         [SerializeField] int fallenLimit = 3;
@@ -120,6 +121,7 @@ namespace SiWoC.Stackopolis.BuildTower
             for (int i = 0; i < blocks.Length; i++)
                 Destroy(blocks[i].gameObject);
 
+            populationSpawner.Clear();
             StatusChanged?.Invoke(BuildStatus());
         }
 
@@ -172,7 +174,10 @@ namespace SiWoC.Stackopolis.BuildTower
                 }
 
                 Collider2D support = under ? under.GetComponent<Collider2D>() : dropZone;
-                population += PopulationFor(block, support);
+                int gained = PopulationFor(block, support);
+                population += gained;
+                if (gained > 0)
+                    populationSpawner.Spawn(block, gained);
                 Debug.Log($"Tower add {block.name} {block.type} perfect={block.perfect} count={tower.Count + 1} fallen={fallenFloors} population={population}", block);
                 tower.Add(block);
                 block.FellBelowValidY += OnBlockFellBelowValidY;

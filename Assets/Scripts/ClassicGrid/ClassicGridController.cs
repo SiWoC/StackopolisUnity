@@ -178,9 +178,21 @@ namespace SiWoC.Stackopolis.ClassicGrid
             pendingReplaceCell = cell;
             int populationAfter = city.Population - lot.Population + pending.Population;
             confirmScrapText.text = string.Format(confirmScrapExistingFormat, city.Population, populationAfter);
-            // Confirming places the pending tower: positive when efficiency meets the threshold.
-            ApplyScrapButtonColors(pending.Efficiency >= efficiencyThreshold);
+            ApplyScrapButtonColors(ReplaceIsPositive(pending, lot));
             confirmScrapPanel.SetActive(true);
+        }
+
+        /// <summary>
+        /// Higher tier always wins. Same tier uses absolute population.
+        /// </summary>
+        static bool ReplaceIsPositive(PendingTower pending, CityState.Lot lot)
+        {
+            int pendingTier = (int)pending.TowerType;
+            int lotTier = (int)lot.TowerType;
+            if (pendingTier != lotTier)
+                return pendingTier > lotTier;
+
+            return pending.Population >= lot.Population;
         }
 
         void HideConfirmScrap()
